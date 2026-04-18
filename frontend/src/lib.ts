@@ -15,6 +15,13 @@ export async function fetchDocuments(): Promise<DocumentSummary[]> {
   return parseResponse<DocumentSummary[]>(response);
 }
 
+export async function deleteDocument(documentId: string): Promise<void> {
+  const response = await fetch(`${API_BASE}/documents/${documentId}`, {
+    method: "DELETE",
+  });
+  await parseResponse(response);
+}
+
 export async function fetchGraphSummary(): Promise<GraphSummary> {
   const response = await fetch(`${API_BASE}/graph`);
   return parseResponse<GraphSummary>(response);

@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import Iterable
 from uuid import uuid4
 
+from fastapi import HTTPException
 from fastapi import UploadFile
 
 from ..config import Settings
@@ -94,6 +95,21 @@ class RAGOrchestrator:
 
     def graph_summary(self) -> dict:
         return self.graph_store.summarize()
+
+    def delete_document(self, document_id: str) -> dict:
+        deleted = self.registry.delete_document(document_id)
+        if deleted is None:
+            raise HTTPException(status_code=404, detail="Document not found.")
+
+        source_path = deleted.get("metadata", {}).get("source_path")
+        if source_path:
+            path = Path(source_path)
+            if path.exists():
+                path.unlink(missing_ok=True)
+
+        self.vector_store.delete_document(document_id)
+        self.graph_store.delete_document(document_id)
+        return deleted
 
     async def _save_upload(self, upload: UploadFile) -> Path:
         destination = self.settings.uploads_dir / f"{uuid4()}-{upload.filename}"

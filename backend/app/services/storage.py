@@ -32,3 +32,18 @@ class DocumentRegistry:
         if not replaced:
             documents.append(document)
         self._write(documents)
+
+    def delete_document(self, document_id: str) -> dict[str, Any] | None:
+        documents = self._read()
+        remaining: list[dict[str, Any]] = []
+        deleted: dict[str, Any] | None = None
+
+        for document in documents:
+            if document["document_id"] == document_id:
+                deleted = document
+                continue
+            remaining.append(document)
+
+        if deleted is not None:
+            self._write(remaining)
+        return deleted

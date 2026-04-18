@@ -24,6 +24,14 @@ def list_documents(orchestrator: RAGOrchestrator = Depends(get_orchestrator)) ->
     return [DocumentSummary(**document) for document in orchestrator.list_documents()]
 
 
+@router.delete("/documents/{document_id}", response_model=DocumentSummary)
+def delete_document(
+    document_id: str,
+    orchestrator: RAGOrchestrator = Depends(get_orchestrator),
+) -> DocumentSummary:
+    return DocumentSummary(**orchestrator.delete_document(document_id))
+
+
 @router.get("/graph", response_model=GraphSummary)
 def graph_summary(orchestrator: RAGOrchestrator = Depends(get_orchestrator)) -> GraphSummary:
     return GraphSummary(**orchestrator.graph_summary())

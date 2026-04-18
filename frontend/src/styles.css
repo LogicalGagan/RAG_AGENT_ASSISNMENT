@@ -245,7 +245,8 @@ textarea {
 }
 
 .primary-button,
-.filter-chip {
+.filter-chip,
+.danger-button {
   border: 0;
   border-radius: 999px;
   font: inherit;
@@ -266,6 +267,20 @@ textarea {
 }
 
 .primary-button:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.danger-button {
+  margin-top: 1rem;
+  padding: 0.72rem 1rem;
+  background: rgba(168, 34, 34, 0.1);
+  color: #8f1f1f;
+  border: 1px solid rgba(168, 34, 34, 0.16);
+  font-weight: 700;
+}
+
+.danger-button:disabled {
   opacity: 0.65;
   cursor: not-allowed;
 }

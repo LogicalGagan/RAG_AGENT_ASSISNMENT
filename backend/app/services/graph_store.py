@@ -69,6 +69,46 @@ class GraphStore:
 
         self._save()
 
+    def delete_document(self, document_id: str) -> None:
+        doc_node = f"doc::{document_id}"
+        if doc_node not in self.graph:
+            return
+
+        chunk_nodes = [neighbor for neighbor in self.graph.neighbors(doc_node) if str(neighbor).startswith("chunk::")]
+        entity_decrements: Counter[str] = Counter()
+
+        for chunk_node in chunk_nodes:
+            if chunk_node not in self.graph:
+                continue
+            for _, entity_node, edge_data in self.graph.out_edges(chunk_node, data=True):
+                if edge_data.get("relation") == "MENTIONS":
+                    entity_decrements[entity_node] += 1
+
+        self.graph.remove_node(doc_node)
+        for chunk_node in chunk_nodes:
+            if chunk_node in self.graph:
+                self.graph.remove_node(chunk_node)
+
+        for entity_node, decrement in entity_decrements.items():
+            if entity_node not in self.graph:
+                continue
+            current_count = int(self.graph.nodes[entity_node].get("mention_count", 1))
+            new_count = max(0, current_count - decrement)
+            if new_count == 0:
+                self.graph.remove_node(entity_node)
+            else:
+                self.graph.nodes[entity_node]["mention_count"] = new_count
+
+        orphan_entities = [
+            node
+            for node, data in self.graph.nodes(data=True)
+            if data.get("kind") == "entity" and self.graph.degree(node) == 0
+        ]
+        for entity_node in orphan_entities:
+            self.graph.remove_node(entity_node)
+
+        self._save()
+
     def expand_hit(self, document_id: str, chunk_id: str, limit: int) -> list[str]:
         doc_node = f"doc::{document_id}"
         chunk_node = f"chunk::{chunk_id}"

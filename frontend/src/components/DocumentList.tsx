@@ -2,9 +2,11 @@ import type { DocumentSummary } from "../types";
 
 type DocumentListProps = {
   documents: DocumentSummary[];
+  onDelete: (documentId: string) => void;
+  deletingId: string | null;
 };
 
-export function DocumentList({ documents }: DocumentListProps) {
+export function DocumentList({ documents, onDelete, deletingId }: DocumentListProps) {
   return (
     <section className="glass-card panel">
       <div className="panel-header">
@@ -30,6 +32,14 @@ export function DocumentList({ documents }: DocumentListProps) {
                 <span>{document.chunk_count} chunks</span>
                 <span>{document.entity_count} entities</span>
               </div>
+              <button
+                type="button"
+                className="danger-button"
+                onClick={() => onDelete(document.document_id)}
+                disabled={deletingId === document.document_id}
+              >
+                {deletingId === document.document_id ? "Removing..." : "Remove File"}
+              </button>
             </article>
           ))
         )}

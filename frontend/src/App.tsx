@@ -5,7 +5,7 @@ import { GraphPanel } from "./components/GraphPanel";
 import { QueryWorkspace } from "./components/QueryWorkspace";
 import { ResultPanel } from "./components/ResultPanel";
 import { StatCard } from "./components/StatCard";
-import { fetchDocuments, fetchGraphSummary, uploadFiles } from "./lib";
+import { deleteDocument, fetchDocuments, fetchGraphSummary, uploadFiles } from "./lib";
 import type { DocumentSummary, GraphSummary, QueryResponse } from "./types";
 
 const pipelineSteps = [
@@ -21,6 +21,7 @@ export default function App() {
   const [result, setResult] = useState<QueryResponse | null>(null);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [uploading, setUploading] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
   const [error, setError] = useState("");
 
   async function refreshData() {
@@ -53,6 +54,22 @@ export default function App() {
       setError(uploadError instanceof Error ? uploadError.message : "Upload failed.");
     } finally {
       setUploading(false);
+    }
+  }
+
+  async function handleDelete(documentId: string) {
+    setDeletingId(documentId);
+    setError("");
+    try {
+      await deleteDocument(documentId);
+      setResult((current) =>
+        current && current.retrieved_context.some((item) => item.document_id === documentId) ? null : current,
+      );
+      await refreshData();
+    } catch (deleteError) {
+      setError(deleteError instanceof Error ? deleteError.message : "Delete failed.");
+    } finally {
+      setDeletingId(null);
     }
   }
 
@@ -117,7 +134,7 @@ export default function App() {
             {error ? <p className="error-text">{error}</p> : null}
           </section>
 
-          <DocumentList documents={documents} />
+          <DocumentList documents={documents} onDelete={handleDelete} deletingId={deletingId} />
           <GraphPanel graph={graph} />
         </div>
 
