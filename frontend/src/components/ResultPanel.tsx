@@ -17,14 +17,23 @@ export function ResultPanel({ result }: ResultPanelProps) {
         <p className="empty-state">Submit a query to see the answer, retrieval evidence, query plan, and graph insights.</p>
       ) : (
         <div className="result-layout">
-          <article className="answer-card">
+          <article className="answer-card answer-hero-card">
             <h3>Answer</h3>
             <pre>{result.answer}</pre>
+            {result.citations.length ? (
+              <div className="citations-row">
+                {result.citations.map((citation) => (
+                  <span key={citation} className="citation-pill">
+                    {citation}
+                  </span>
+                ))}
+              </div>
+            ) : null}
           </article>
           <article className="answer-card">
             <h3>Query plan</h3>
             <p className="muted">Rewritten query</p>
-            <p>{result.query_plan.rewritten_query}</p>
+            <p className="wrapped-text">{result.query_plan.rewritten_query}</p>
             <p className="muted">Keywords</p>
             <div className="tag-row">
               {result.query_plan.keywords.map((keyword) => (
@@ -56,7 +65,16 @@ export function ResultPanel({ result }: ResultPanelProps) {
                     <span className="tiny">score {(item.score * 100).toFixed(1)}%</span>
                   </div>
                   <h4>{item.title}</h4>
-                  <p>{item.content}</p>
+                  <p className="wrapped-text">{item.content}</p>
+                  {item.graph_context.length ? (
+                    <div className="mini-tag-row">
+                      {item.graph_context.map((context) => (
+                        <span key={context} className="mini-context-pill">
+                          {context}
+                        </span>
+                      ))}
+                    </div>
+                  ) : null}
                 </div>
               ))}
             </div>

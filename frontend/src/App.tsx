@@ -73,30 +73,61 @@ export default function App() {
     }
   }
 
+  const indexedCount = documents.length;
+  const modalityCount = Object.keys(graph?.documents_by_modality ?? {}).length;
+  const nodeCount = graph?.total_nodes ?? 0;
+
   return (
     <main className="app-shell">
+      <section className="topbar">
+        <div className="brand-block">
+          <p className="eyebrow">Academic Assignment Build</p>
+          <div className="brand-row">
+            <div className="brand-mark">MM</div>
+            <div>
+              <h1 className="brand-title">Multi-Modal Graph RAG</h1>
+              <p className="brand-subtitle">Grounded retrieval across files, images, and graph relationships</p>
+            </div>
+          </div>
+        </div>
+        <div className="topbar-status">
+          <div className="status-pill">
+            <span className="status-dot" />
+            Ready for live demo
+          </div>
+          <p className="muted">Dockerized full-stack app with local Ollama and graph-backed retrieval.</p>
+        </div>
+      </section>
+
       <section className="hero">
         <div className="hero-copy">
           <p className="eyebrow">End-to-End Assignment Demo</p>
-          <h1>Multi-Modal Graph RAG System</h1>
+          <h2 className="hero-title">Ask questions over text, PDFs, and images with retrieval plus graph context.</h2>
           <p className="hero-text">
             A full-stack Retrieval Augmented Generation platform with vector search, graph-based context expansion,
             and cross-modal ingestion across text, PDFs, images, and optional audio.
           </p>
+          <div className="hero-highlights">
+            <span className="feature-chip">Chroma retrieval</span>
+            <span className="feature-chip">NetworkX graph</span>
+            <span className="feature-chip">Ollama generation</span>
+            <span className="feature-chip">Docker-ready demo</span>
+          </div>
         </div>
         <div className="hero-stats">
-          <StatCard label="Vector Store" value="ChromaDB" helper="Top-k retrieval with persistent storage" />
-          <StatCard label="Graph Layer" value="NetworkX" helper="Entity and cross-modal relationship modeling" />
-          <StatCard label="LLM Layer" value="OpenAI / Fallback" helper="Response generation with safe offline mode" />
+          <StatCard label="Indexed Files" value={indexedCount} helper="Current knowledge base assets" />
+          <StatCard label="Modalities" value={modalityCount} helper="Represented across the graph" />
+          <StatCard label="Graph Nodes" value={nodeCount} helper="Documents, chunks, and entities tracked" />
         </div>
       </section>
 
-      <section className="glass-card panel">
+      <section className="glass-card panel atmospheric-panel">
         <div className="panel-header">
           <div>
             <p className="eyebrow">Pipeline</p>
             <h2>Architecture at a glance</h2>
           </div>
+          <span className="pill accent-pill">Production-style flow</span>
         </div>
         <div className="pipeline-grid">
           {pipelineSteps.map((step) => (
@@ -109,12 +140,13 @@ export default function App() {
 
       <section className="workspace-grid">
         <div className="workspace-column">
-          <section className="glass-card panel">
+          <section className="glass-card panel upload-panel">
             <div className="panel-header">
               <div>
                 <p className="eyebrow">Ingestion</p>
                 <h2>Upload multi-modal files</h2>
               </div>
+              <span className="pill">{selectedFiles.length} selected</span>
             </div>
             <form className="upload-form" onSubmit={handleUpload}>
               <label className="upload-zone">
@@ -125,8 +157,18 @@ export default function App() {
                   onChange={(event) => setSelectedFiles(Array.from(event.target.files || []))}
                 />
                 <span>{selectedFiles.length ? `${selectedFiles.length} file(s) selected` : "Choose text, PDF, image, or audio files"}</span>
-                <small>Text and PDF are parsed directly. Images and audio improve when an OpenAI API key is configured.</small>
+                <small>Text and PDF are parsed directly. Images use Ollama vision when available, then become searchable text.</small>
               </label>
+              {selectedFiles.length ? (
+                <div className="selected-file-grid">
+                  {selectedFiles.map((file) => (
+                    <div key={`${file.name}-${file.size}`} className="selected-file-pill">
+                      <strong>{file.name}</strong>
+                      <span>{Math.max(1, Math.round(file.size / 1024))} KB</span>
+                    </div>
+                  ))}
+                </div>
+              ) : null}
               <button type="submit" className="primary-button" disabled={uploading || !selectedFiles.length}>
                 {uploading ? "Indexing files..." : "Ingest Into Graph RAG"}
               </button>

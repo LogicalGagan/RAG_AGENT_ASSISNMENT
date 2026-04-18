@@ -29,11 +29,15 @@ export function GraphPanel({ graph }: GraphPanelProps) {
           </div>
           <div className="subsection">
             <h3>Documents by modality</h3>
-            <div className="tag-row">
+            <div className="modality-stack">
               {Object.entries(graph.documents_by_modality).map(([modality, count]) => (
-                <span key={modality} className={`modality-tag modality-${modality}`}>
-                  {modality}: {count}
-                </span>
+                <div key={modality} className="modality-row">
+                  <span className={`modality-tag modality-${modality}`}>{modality}</span>
+                  <div className="modality-bar-track">
+                    <div className={`modality-bar modality-${modality}`} style={{ width: `${Math.min(100, count * 18)}%` }} />
+                  </div>
+                  <strong>{count}</strong>
+                </div>
               ))}
             </div>
           </div>

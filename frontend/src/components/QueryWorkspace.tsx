@@ -4,6 +4,11 @@ import { queryKnowledgeBase } from "../lib";
 import type { QueryResponse } from "../types";
 
 const modalities = ["text", "pdf", "image", "audio"];
+const promptSuggestions = [
+  "Summarize the uploaded knowledge base.",
+  "Compare the PDF content with the uploaded image.",
+  "What are the main entities mentioned across the files?",
+];
 
 type QueryWorkspaceProps = {
   onResult: (result: QueryResponse | null) => void;
@@ -57,6 +62,13 @@ export function QueryWorkspace({ onResult }: QueryWorkspaceProps) {
           rows={5}
           required
         />
+        <div className="suggestion-row">
+          {promptSuggestions.map((suggestion) => (
+            <button key={suggestion} type="button" className="suggestion-chip" onClick={() => setQuestion(suggestion)}>
+              {suggestion}
+            </button>
+          ))}
+        </div>
         <div className="controls-row">
           <label className="field">
             <span>Top-K retrieval</span>

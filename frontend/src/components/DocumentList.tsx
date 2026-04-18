@@ -26,8 +26,10 @@ export function DocumentList({ documents, onDelete, deletingId }: DocumentListPr
                 <span className={`modality-tag modality-${document.modality}`}>{document.modality}</span>
                 <span className="tiny">{new Date(document.created_at).toLocaleString()}</span>
               </div>
-              <h3>{document.title}</h3>
-              <p className="muted">{document.filename}</p>
+              <div className="document-body">
+                <h3>{document.title}</h3>
+                <p className="muted document-filename">{document.filename}</p>
+              </div>
               <div className="document-metrics">
                 <span>{document.chunk_count} chunks</span>
                 <span>{document.entity_count} entities</span>
