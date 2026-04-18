@@ -1,0 +1,9 @@
+chromadb==0.5.5
+fastapi==0.115.0
+networkx==3.3
+openai==1.51.2
+pillow==10.4.0
+pydantic-settings==2.5.2
+PyPDF2==3.0.1
+python-multipart==0.0.9
+uvicorn[standard]==0.30.6

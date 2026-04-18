@@ -1,0 +1,23 @@
+flowchart LR
+    A[User Uploads Files] --> B[FastAPI Ingestion API]
+    B --> C{Modality Router}
+    C -->|Text| D[Text Extractor]
+    C -->|PDF| E[PDF Parser]
+    C -->|Image| F[Image Descriptor]
+    C -->|Audio Optional| G[Audio Transcriber]
+    D --> H[Chunking + Metadata]
+    E --> H
+    F --> H
+    G --> H
+    H --> I[Embedding Service]
+    I --> J[ChromaDB Vector Store]
+    H --> K[Entity Extraction]
+    K --> L[NetworkX Knowledge Graph]
+    M[User Query] --> N[Query Planner]
+    N --> O[Query Embedding]
+    O --> J
+    J --> P[Top-K Retrieved Chunks]
+    P --> Q[Graph Expansion]
+    L --> Q
+    Q --> R[LLM / Fallback Generator]
+    R --> S[Grounded Answer + Citations + Graph Insights]
