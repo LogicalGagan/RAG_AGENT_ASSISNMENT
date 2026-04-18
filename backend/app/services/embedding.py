@@ -22,11 +22,16 @@ class EmbeddingService:
             return []
 
         if self.client:
-            response = self.client.embeddings.create(
-                model=self.settings.openai_embedding_model,
-                input=items,
-            )
-            return [item.embedding for item in response.data]
+            try:
+                response = self.client.embeddings.create(
+                    model=self.settings.openai_embedding_model,
+                    input=items,
+                )
+                return [item.embedding for item in response.data]
+            except Exception:
+                # Fall back to deterministic local embeddings if the external API
+                # is unavailable, quota-limited, or otherwise fails at runtime.
+                self.client = None
 
         return [hashed_embedding(text) for text in items]
 

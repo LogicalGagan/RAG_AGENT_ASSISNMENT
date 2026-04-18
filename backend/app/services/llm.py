@@ -28,19 +28,22 @@ class LLMService:
             return "I could not find relevant evidence in the indexed knowledge base yet. Please ingest more files and try again."
 
         if self.client:
-            prompt = self._build_answer_prompt(question, query_plan, retrieved_context, graph_insights)
-            response = self.client.chat.completions.create(
-                model=self.settings.openai_chat_model,
-                messages=[
-                    {
-                        "role": "system",
-                        "content": "You are a precise RAG assistant. Answer only from the supplied context, cite evidence naturally, and mention uncertainty when context is incomplete.",
-                    },
-                    {"role": "user", "content": prompt},
-                ],
-                temperature=0.2,
-            )
-            return response.choices[0].message.content or ""
+            try:
+                prompt = self._build_answer_prompt(question, query_plan, retrieved_context, graph_insights)
+                response = self.client.chat.completions.create(
+                    model=self.settings.openai_chat_model,
+                    messages=[
+                        {
+                            "role": "system",
+                            "content": "You are a precise RAG assistant. Answer only from the supplied context, cite evidence naturally, and mention uncertainty when context is incomplete.",
+                        },
+                        {"role": "user", "content": prompt},
+                    ],
+                    temperature=0.2,
+                )
+                return response.choices[0].message.content or ""
+            except Exception:
+                self.client = None
 
         summary_lines = [
             f"Question: {question}",
@@ -63,28 +66,36 @@ class LLMService:
         encoded = base64.b64encode(image_path.read_bytes()).decode("utf-8")
         suffix = image_path.suffix.lower().replace(".", "") or "jpeg"
         data_url = f"data:image/{suffix};base64,{encoded}"
-        response = self.client.chat.completions.create(
-            model=self.settings.openai_chat_model,
-            messages=[
-                {
-                    "role": "user",
-                    "content": [
-                        {"type": "text", "text": f"Describe the key semantic content of this image named {filename} for retrieval in a RAG system. Keep it to 5-7 sentences."},
-                        {"type": "image_url", "image_url": {"url": data_url}},
-                    ],
-                }
-            ],
-            temperature=0.2,
-        )
-        return response.choices[0].message.content or ""
+        try:
+            response = self.client.chat.completions.create(
+                model=self.settings.openai_chat_model,
+                messages=[
+                    {
+                        "role": "user",
+                        "content": [
+                            {"type": "text", "text": f"Describe the key semantic content of this image named {filename} for retrieval in a RAG system. Keep it to 5-7 sentences."},
+                            {"type": "image_url", "image_url": {"url": data_url}},
+                        ],
+                    }
+                ],
+                temperature=0.2,
+            )
+            return response.choices[0].message.content or ""
+        except Exception:
+            self.client = None
+            return ""
 
     def transcribe_audio(self, audio_path: Path) -> str:
         if not self.client:
             return ""
 
-        with audio_path.open("rb") as audio_file:
-            transcript = self.client.audio.transcriptions.create(model="whisper-1", file=audio_file)
-        return getattr(transcript, "text", "") or ""
+        try:
+            with audio_path.open("rb") as audio_file:
+                transcript = self.client.audio.transcriptions.create(model="whisper-1", file=audio_file)
+            return getattr(transcript, "text", "") or ""
+        except Exception:
+            self.client = None
+            return ""
 
     def _build_answer_prompt(
         self,
@@ -101,12 +112,13 @@ class LLMService:
                 f"Content: {item.content}\n"
                 f"Graph: {graph_text}"
             )
+        joined_context = "\n\n".join(context_blocks)
         graph_block = "\n".join(f"- {insight}" for insight in graph_insights) or "- No additional graph insights"
         return (
             f"User question: {question}\n"
             f"Rewritten query: {query_plan.rewritten_query}\n"
             f"Keywords: {', '.join(query_plan.keywords)}\n\n"
-            f"Retrieved context:\n\n{'\n\n'.join(context_blocks)}\n\n"
+            f"Retrieved context:\n\n{joined_context}\n\n"
             f"Graph-level insights:\n{graph_block}\n\n"
             "Produce a concise answer with evidence-backed reasoning and mention which modalities contributed."
         )
