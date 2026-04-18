@@ -3,6 +3,8 @@ from __future__ import annotations
 import base64
 from pathlib import Path
 
+import httpx
+
 from ..config import Settings
 from ..schemas import QueryPlan, RetrievalResult
 
@@ -16,6 +18,11 @@ class LLMService:
     def __init__(self, settings: Settings) -> None:
         self.settings = settings
         self.client = OpenAI(api_key=settings.openai_api_key) if settings.use_openai and OpenAI else None
+        self.ollama_client = (
+            httpx.Client(base_url=settings.ollama_base_url, timeout=settings.ollama_timeout_seconds)
+            if settings.use_ollama
+            else None
+        )
 
     def generate_answer(
         self,
@@ -26,6 +33,25 @@ class LLMService:
     ) -> str:
         if not retrieved_context:
             return "I could not find relevant evidence in the indexed knowledge base yet. Please ingest more files and try again."
+
+        if self.ollama_client:
+            try:
+                prompt = self._build_answer_prompt(question, query_plan, retrieved_context, graph_insights)
+                response = self.ollama_client.post(
+                    "/api/generate",
+                    json={
+                        "model": self.settings.ollama_model,
+                        "prompt": prompt,
+                        "stream": False,
+                    },
+                )
+                response.raise_for_status()
+                payload = response.json()
+                answer = payload.get("response", "").strip()
+                if answer:
+                    return answer
+            except Exception:
+                self.ollama_client = None
 
         if self.client:
             try:
@@ -60,6 +86,29 @@ class LLMService:
         return "\n".join(summary_lines)
 
     def describe_image(self, image_path: Path, filename: str) -> str:
+        if self.ollama_client:
+            try:
+                encoded = base64.b64encode(image_path.read_bytes()).decode("utf-8")
+                response = self.ollama_client.post(
+                    "/api/generate",
+                    json={
+                        "model": self.settings.ollama_vision_model,
+                        "prompt": (
+                            f"Describe this image named {filename} for a multimodal RAG system. "
+                            "Mention visible objects, scene context, text in the image if any, and likely relevance in 4-6 sentences."
+                        ),
+                        "images": [encoded],
+                        "stream": False,
+                    },
+                )
+                response.raise_for_status()
+                payload = response.json()
+                answer = payload.get("response", "").strip()
+                if answer:
+                    return answer
+            except Exception:
+                pass
+
         if not self.client:
             return ""
 

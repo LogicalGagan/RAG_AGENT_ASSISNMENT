@@ -20,6 +20,11 @@ class Settings(BaseSettings):
     openai_api_key: str | None = None
     openai_embedding_model: str = "text-embedding-3-small"
     openai_chat_model: str = "gpt-4o-mini"
+    llm_provider: str = "ollama"
+    ollama_base_url: str = "http://host.docker.internal:11434"
+    ollama_model: str = "qwen2:0.5b"
+    ollama_vision_model: str = "moondream"
+    ollama_timeout_seconds: float = 120.0
 
     chunk_size: int = 900
     chunk_overlap: int = 150
@@ -35,7 +40,11 @@ class Settings(BaseSettings):
 
     @property
     def use_openai(self) -> bool:
-        return bool(self.openai_api_key)
+        return self.llm_provider.lower() == "openai" and bool(self.openai_api_key)
+
+    @property
+    def use_ollama(self) -> bool:
+        return self.llm_provider.lower() == "ollama"
 
     def ensure_directories(self) -> None:
         self.data_dir.mkdir(parents=True, exist_ok=True)

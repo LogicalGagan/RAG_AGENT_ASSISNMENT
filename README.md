@@ -1,6 +1,6 @@
 # Multi-Modal Graph RAG System
 
-A production-oriented, full-stack academic assignment that implements an end-to-end Multi-Modal Retrieval Augmented Generation system with a lightweight knowledge graph. The platform ingests `text`, `pdf`, and `image` files by default, stores chunk embeddings in `ChromaDB`, models relationships in `NetworkX`, and answers user questions through grounded retrieval plus LLM-backed or offline fallback generation.
+A production-oriented, full-stack academic assignment that implements an end-to-end Multi-Modal Retrieval Augmented Generation system with a lightweight knowledge graph. The platform ingests `text`, `pdf`, and `image` files by default, stores chunk embeddings in `ChromaDB`, models relationships in `NetworkX`, and answers user questions through grounded retrieval plus local Ollama-backed or fallback generation.
 
 ## Key Features
 
@@ -10,6 +10,7 @@ A production-oriented, full-stack academic assignment that implements an end-to-
 - FastAPI backend exposing ingestion, listing, graph-summary, and query endpoints.
 - React + Vite frontend for uploads, chat-style querying, and evidence inspection.
 - Dockerized deployment with a single `docker-compose.yml`.
+- Local Ollama integration using your host Ollama server with `qwen2:0.5b` for answer generation and `moondream` for image understanding.
 - Graceful offline fallback mode when no API key is configured, useful for demos and evaluation.
 
 ## Architecture Diagram
@@ -47,10 +48,10 @@ The editable Mermaid source is also available in [docs/architecture.mmd](docs/ar
 
 - Frontend: React, Vite, TypeScript, custom CSS
 - Backend: FastAPI, Python 3.11
-- Embeddings: OpenAI embeddings when configured, deterministic local hash embeddings as fallback
+- Embeddings: deterministic local hash embeddings by default, OpenAI embeddings when explicitly configured
 - Vector DB: ChromaDB
 - Knowledge Graph: NetworkX
-- LLM: OpenAI Chat Completions when configured, extractive fallback answer synthesis otherwise
+- LLM: Ollama (`qwen2:0.5b`) by default, with `moondream` for image understanding; OpenAI optionally; extractive fallback answer synthesis otherwise
 - Document Parsing: `PyPDF2`, `Pillow`
 - Deployment: Docker, Docker Compose, Nginx
 
@@ -96,14 +97,15 @@ The editable Mermaid source is also available in [docs/architecture.mmd](docs/ar
 
 - Supported extensions: `.png`, `.jpg`, `.jpeg`, `.bmp`, `.gif`, `.webp`
 - Processing:
-  - With `OPENAI_API_KEY`: generates a semantic description for better retrieval
-  - Without API key: falls back to metadata-driven indexing using filename and dimensions
+- With `LLM_PROVIDER=ollama` and `OLLAMA_VISION_MODEL=moondream`: generates a local vision description for better retrieval
+- With `OPENAI_API_KEY` and `LLM_PROVIDER=openai`: generates a cloud vision description
+- Without a vision-capable model: falls back to metadata-driven indexing using filename and dimensions
 
 ### Optional 4. Audio
 
 - Supported extensions: `.mp3`, `.wav`, `.m4a`, `.ogg`, `.flac`
 - Processing:
-  - With `OPENAI_API_KEY`: transcribes via Whisper
+- With `OPENAI_API_KEY` and `LLM_PROVIDER=openai`: transcribes via Whisper
   - Without API key: stores filename-level placeholder metadata
 
 ## Query Pipeline
@@ -112,7 +114,7 @@ The editable Mermaid source is also available in [docs/architecture.mmd](docs/ar
 2. Query embeddings are generated using the same embedding service as ingestion.
 3. ChromaDB returns top-k relevant chunks.
 4. NetworkX expands each hit with graph-neighbor insights such as related entities and cross-modal links.
-5. The final answer is generated from retrieved context using OpenAI if configured, or a grounded fallback summarizer otherwise.
+5. The final answer is generated from retrieved context using Ollama by default, OpenAI if explicitly configured, or a grounded fallback summarizer otherwise.
 
 ## Knowledge Graph Design
 
@@ -144,17 +146,20 @@ This graph makes the system more explainable than plain vector search by surfaci
 ### Option 1: Docker Compose
 
 1. Copy `.env.example` to `.env`.
-2. Add `OPENAI_API_KEY` if you want richer image understanding, audio transcription, and LLM generation.
-3. Run:
+2. Start Ollama on your machine and confirm `qwen2:0.5b` and `moondream` are available locally.
+3. Set `OLLAMA_BASE_URL=http://host.docker.internal:11434` in `.env`.
+4. Optionally add `OPENAI_API_KEY` and set `LLM_PROVIDER=openai` if you want cloud generation, image understanding, and audio transcription.
+5. Run:
 
 ```bash
 docker-compose up --build
 ```
 
-4. Open:
+6. Open:
 
 - Frontend: `http://localhost:3000`
 - Backend docs: `http://localhost:8000/docs`
+- Host Ollama API: `http://localhost:11434`
 
 ### Option 2: Run Locally Without Docker
 
@@ -198,7 +203,7 @@ Using Neo4j would add another container and operational complexity. The solution
 
 ### Challenge 3: Dependence on external APIs can hurt demo stability
 
-Academic demos fail when network keys or quotas are unavailable. This project includes deterministic local embedding and answer-generation fallbacks so the system remains demonstrable even without external model credentials.
+Academic demos fail when network keys or quotas are unavailable. This project uses local Ollama generation by default and also includes deterministic local embedding and answer-generation fallbacks so the system remains demonstrable even without external model credentials.
 
 ## Literature Survey
 
