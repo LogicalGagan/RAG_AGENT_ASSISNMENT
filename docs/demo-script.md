@@ -1,54 +1,91 @@
 # 10-Minute Demo Script
 
-## 1. Problem Statement
+## 1. Introduction
 
-Explain that the goal is not just document Q&A, but multi-modal grounded retrieval across text, PDFs, and images with graph-aware reasoning.
+Say that this is a **full-stack multi-modal Graph RAG system** that supports:
 
-## 2. Architecture
+- text
+- PDFs
+- images
 
-Show the Mermaid diagram in the README and explain:
+and combines:
 
-- ingestion layer
-- vector retrieval layer
-- graph layer
-- generation layer
+- vector retrieval using ChromaDB
+- graph reasoning using NetworkX
+- local Ollama generation for grounded answers
+
+## 2. Architecture Overview
+
+Show the Mermaid diagram from the README and explain the pipeline in one line each:
+
+- ingestion API receives files
+- modality-specific extraction converts them to retrieval-ready text
+- chunks are stored in ChromaDB
+- entities and relationships are stored in the knowledge graph
+- user query triggers retrieval + graph expansion + answer generation
 
 ## 3. Ingestion Demo
 
 Upload:
 
-- one `.txt` or `.md` file
+- one `.txt` file
 - one `.pdf`
 - one `.jpeg` or `.png`
 
-Then highlight:
+While doing that, say:
 
-- indexed file cards
+- text and PDF are parsed directly
+- images are described using local Ollama vision
+- all modalities are normalized into searchable text before retrieval
+
+Then highlight in the UI:
+
+- inventory cards
+- file counts
 - chunk counts
 - entity counts
 - graph node and edge totals
 
 ## 4. Query Demo
 
-Ask a question that requires cross-modal grounding, for example:
+Ask a cross-modal question such as:
 
-`Compare what the document explains about the system architecture with what the uploaded image suggests.`
+`Summarize the uploaded knowledge base and mention what the image shows.`
 
-Point out:
+Then point out:
 
-- rewritten query
-- retrieved evidence
+- the answer panel
+- citations
 - graph insights
-- final grounded answer
+- retrieved evidence cards
 
-## 5. Engineering Discussion
+Mention that the answer is grounded in retrieved context instead of direct free-form generation.
+
+## 5. Inventory Management Demo
+
+Remove one uploaded file from the inventory using the `Remove File` button.
+
+Then show:
+
+- the card disappears
+- the graph metrics update
+- the removed file no longer affects later answers
+
+This helps demonstrate lifecycle management, not just ingestion.
+
+## 6. Engineering Choices
 
 Briefly explain:
 
-- why ChromaDB was chosen for simplicity
-- why NetworkX was chosen over Neo4j for a lightweight demo
-- why the app includes offline fallbacks for reliability
+- `ChromaDB` was chosen for simple local vector persistence
+- `NetworkX` was chosen for lightweight graph reasoning without extra operational overhead
+- `qwen2:0.5b` was chosen for lightweight local answer generation
+- `moondream` was chosen for local image understanding
+- local Ollama was used to avoid cloud quota issues during live demo
 
-## 6. Close
+## 7. Close
 
-End with the literature survey and note that the design is inspired by agent architectures that combine planning, memory, and tool use.
+Finish by connecting the design to the literature survey:
+
+- modern agentic systems rely on memory, planning, and tool orchestration
+- this project applies that idea through vector retrieval, graph memory, and orchestrated grounded generation
