@@ -5,9 +5,9 @@ import type { QueryResponse } from "../types";
 
 const modalities = ["text", "pdf", "image", "audio"];
 const promptSuggestions = [
-  "Summarize the uploaded knowledge base.",
-  "Compare the PDF content with the uploaded image.",
-  "What are the main entities mentioned across the files?",
+  "Find me running shoes that look like this image.",
+  "What are the features of the black leather jacket?",
+  "Compare the specs of these two products.",
 ];
 
 type QueryWorkspaceProps = {
@@ -58,7 +58,7 @@ export function QueryWorkspace({ onResult }: QueryWorkspaceProps) {
         <textarea
           value={question}
           onChange={(event) => setQuestion(event.target.value)}
-          placeholder="Example: Compare what the PDF says about the architecture with what the uploaded image illustrates."
+          placeholder="Example: Show me summer dresses similar to the uploaded image."
           rows={5}
           required
         />

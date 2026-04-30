@@ -10,7 +10,7 @@ Say that this is a **full-stack multi-modal Graph RAG system** that supports:
 
 and combines:
 
-- vector retrieval using ChromaDB
+- vector retrieval using Pinecone
 - graph reasoning using NetworkX
 - local Ollama generation for grounded answers
 
@@ -20,7 +20,7 @@ Show the Mermaid diagram from the README and explain the pipeline in one line ea
 
 - ingestion API receives files
 - modality-specific extraction converts them to retrieval-ready text
-- chunks are stored in ChromaDB
+- chunks are stored in Pinecone and images are embedded directly with CLIP
 - entities and relationships are stored in the knowledge graph
 - user query triggers retrieval + graph expansion + answer generation
 
@@ -35,8 +35,8 @@ Upload:
 While doing that, say:
 
 - text and PDF are parsed directly
-- images are described using local Ollama vision
-- all modalities are normalized into searchable text before retrieval
+- images are directly embedded using a CLIP visual model
+- text descriptions are embedded using the same CLIP model, putting everything in the same search space
 
 Then highlight in the UI:
 
@@ -50,7 +50,7 @@ Then highlight in the UI:
 
 Ask a cross-modal question such as:
 
-`Summarize the uploaded knowledge base and mention what the image shows.`
+`Find me running shoes that look like this uploaded image, and summarize their reviews.`
 
 Then point out:
 
@@ -77,10 +77,10 @@ This helps demonstrate lifecycle management, not just ingestion.
 
 Briefly explain:
 
-- `ChromaDB` was chosen for simple local vector persistence
+- `Pinecone` was chosen for serverless cloud vector storage to save local RAM
 - `NetworkX` was chosen for lightweight graph reasoning without extra operational overhead
 - `qwen2:0.5b` was chosen for lightweight local answer generation
-- `moondream` was chosen for local image understanding
+- `sentence-transformers/clip-ViT-B-32` was chosen to demonstrate true cross-modal vector embedding
 - local Ollama was used to avoid cloud quota issues during live demo
 
 ## 7. Close

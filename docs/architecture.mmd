@@ -3,18 +3,18 @@ flowchart LR
     B --> C{Modality Router}
     C -->|Text| D[Text Extractor]
     C -->|PDF| E[PDF Parser]
-    C -->|Image| F[Ollama Vision Descriptor]
+    C -->|Image| F[CLIP Visual Embedder]
     C -->|Audio Optional| G[Audio Transcriber]
     D --> H[Chunking + Metadata]
     E --> H
-    F --> H
+    F --> J
     G --> H
-    H --> I[Local Embedding Service]
-    I --> J[ChromaDB Vector Store]
+    H --> I[CLIP Text Embedder]
+    I --> J[Pinecone Vector Store]
     H --> K[Entity Extraction]
     K --> L[NetworkX Knowledge Graph]
     M[User Query] --> N[Query Planner]
-    N --> O[Local Query Embedding]
+    N --> O[CLIP Text Embedding]
     O --> J
     J --> P[Top-K Retrieved Chunks]
     P --> Q[Graph Expansion]

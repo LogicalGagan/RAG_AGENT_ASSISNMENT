@@ -81,12 +81,12 @@ export default function App() {
     <main className="app-shell">
       <section className="topbar">
         <div className="brand-block">
-          <p className="eyebrow">Academic Assignment Build</p>
+          <p className="eyebrow">E-Commerce Intelligence</p>
           <div className="brand-row">
             <div className="brand-mark">MM</div>
             <div>
-              <h1 className="brand-title">Multi-Modal Graph RAG</h1>
-              <p className="brand-subtitle">Grounded retrieval across files, images, and graph relationships</p>
+              <h1 className="brand-title">E-Commerce Product Intelligence</h1>
+              <p className="brand-subtitle">Smart search, recommendations, and Q&A across product images and descriptions</p>
             </div>
           </div>
         </div>
@@ -101,8 +101,8 @@ export default function App() {
 
       <section className="hero">
         <div className="hero-copy">
-          <p className="eyebrow">End-to-End Assignment Demo</p>
-          <h2 className="hero-title">Ask questions over text, PDFs, and images with retrieval plus graph context.</h2>
+          <p className="eyebrow">Product Discovery Platform</p>
+          <h2 className="hero-title">Discover products through text, reviews, and visual search.</h2>
           <p className="hero-text">
             A full-stack Retrieval Augmented Generation platform with vector search, graph-based context expansion,
             and cross-modal ingestion across text, PDFs, images, and optional audio.

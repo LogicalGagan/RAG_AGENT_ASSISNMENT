@@ -1,6 +1,6 @@
-# Multi-Modal Graph RAG System
+# E-Commerce Product Intelligence System
 
-A production-oriented academic assignment that implements an end-to-end **Multi-Modal Retrieval Augmented Generation system with knowledge graph capabilities**. The platform ingests `text`, `pdf`, and `image` files by default, stores chunk embeddings in `ChromaDB`, models relationships in `NetworkX`, and answers user questions through grounded retrieval plus local Ollama-backed generation.
+A production-oriented academic assignment that implements an end-to-end **Multi-Modal Retrieval Augmented Generation system with knowledge graph capabilities** tailored for E-Commerce. The platform ingests `text`, `pdf`, and `image` files (like product descriptions and photos), stores chunk embeddings in `Pinecone`, models relationships in `NetworkX`, and answers user questions through grounded retrieval plus local Ollama-backed generation.
 
 ## What This Project Does
 
@@ -16,13 +16,13 @@ This system lets a user:
 The current implementation uses:
 
 - `qwen2:0.5b` on local Ollama for final answer generation
-- `moondream` on local Ollama for image understanding
-- deterministic local embeddings for stable retrieval without API quota dependency
+- `sentence-transformers/clip-ViT-B-32` for unified cross-modal text and image embeddings
+- `Pinecone` serverless vector database
 
 ## Key Features
 
 - Multi-modal ingestion pipeline for text documents, PDFs, and images, with optional audio hooks.
-- Vector retrieval using `ChromaDB` with persistent local storage.
+- Vector retrieval using `Pinecone` for serverless cloud storage.
 - Knowledge graph construction using `NetworkX` for document, chunk, entity, and cross-modal relationships.
 - FastAPI backend exposing ingestion, querying, graph summary, inventory listing, and file deletion APIs.
 - React + Vite frontend with a presentation-ready dashboard, upload workspace, query console, and evidence panels.
@@ -87,8 +87,8 @@ The editable Mermaid source is available in [docs/architecture.mmd](docs/archite
 
 - Frontend: React, Vite, TypeScript, custom CSS
 - Backend: FastAPI, Python 3.11
-- Embeddings: deterministic local hash embeddings by default, OpenAI embeddings only if explicitly configured
-- Vector Database: ChromaDB
+- Embeddings: `sentence-transformers/clip-ViT-B-32`
+- Vector Database: Pinecone
 - Knowledge Graph: NetworkX
 - Answer Model: Ollama `qwen2:0.5b`
 - Vision Model: Ollama `moondream`
@@ -137,9 +137,8 @@ The editable Mermaid source is available in [docs/architecture.mmd](docs/archite
 
 - Extensions: `.png`, `.jpg`, `.jpeg`, `.bmp`, `.gif`, `.webp`
 - Flow:
-  - with `LLM_PROVIDER=ollama` and `OLLAMA_VISION_MODEL=moondream`: generate local image description for retrieval
-  - with `LLM_PROVIDER=openai`: generate cloud image description
-  - without a vision-capable model: fall back to metadata-based summary
+  - Extract true visual embedding directly from the image using `sentence-transformers/clip-ViT-B-32`
+  - Allows semantic matching between text queries and image visuals (e.g. searching "red dress" returns an image of a red dress).
 
 ### Optional 4. Audio
 
@@ -151,8 +150,8 @@ The editable Mermaid source is available in [docs/architecture.mmd](docs/archite
 ## Query Pipeline
 
 1. Query processing rewrites the question, extracts keywords, and infers modality filters.
-2. Query embeddings are generated locally using the same embedding logic used at ingestion time.
-3. ChromaDB returns top-k relevant chunks.
+2. Query embeddings are generated locally using the CLIP model.
+3. Pinecone returns top-k relevant chunks (both text and images).
 4. NetworkX expands each hit with graph-neighbor insights such as related entities and cross-modal links.
 5. Ollama `qwen2:0.5b` generates the final answer from grounded retrieved context.
 6. If an external model path fails, the backend falls back to a deterministic extractive answer mode instead of crashing.
@@ -243,6 +242,8 @@ OLLAMA_BASE_URL=http://host.docker.internal:11434
 OLLAMA_MODEL=qwen2:0.5b
 OLLAMA_VISION_MODEL=moondream
 OLLAMA_TIMEOUT_SECONDS=120
+PINECONE_API_KEY=your_pinecone_api_key_here
+PINECONE_INDEX_NAME=multimodal-rag
 ```
 
 5. Run:
@@ -306,7 +307,7 @@ npm run dev
 5. Ask:
 
 ```text
-Summarize the uploaded knowledge base and mention what the image shows.
+Find me running shoes that look like this image, and summarize their reviews.
 ```
 
 6. Verify:
@@ -324,11 +325,9 @@ Summarize the uploaded knowledge base and mention what the image shows.
 
 Use questions like these during testing or presentation:
 
-- `Summarize the uploaded knowledge base.`
-- `What does the uploaded PDF explain?`
-- `What does the uploaded image show?`
-- `Compare the uploaded image with the uploaded text or PDF.`
-- `What are the main entities mentioned across the uploaded files?`
+- `Find me running shoes that look like this image.`
+- `What are the features of the black leather jacket?`
+- `Compare the specs of these two products.`
 
 ## Demo Flow For Presentation
 
