@@ -25,6 +25,8 @@ class Settings(BaseSettings):
     ollama_model: str = "qwen2:0.5b"
     ollama_vision_model: str = "moondream"
     ollama_timeout_seconds: float = 120.0
+    pinecone_api_key: str | None = None
+    pinecone_index_name: str = "multimodal-rag"
 
     chunk_size: int = 900
     chunk_overlap: int = 150

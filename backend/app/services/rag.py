@@ -39,7 +39,13 @@ class RAGOrchestrator:
             for chunk in document.chunks:
                 chunk.metadata["created_at"] = document.metadata["created_at"]
 
-            embeddings = self.embedding_service.embed_texts(chunk.content for chunk in document.chunks)
+            embeddings = []
+            if document.modality == "image" and "source_path" in document.metadata:
+                img_emb = self.embedding_service.embed_image(document.metadata["source_path"])
+                embeddings = [img_emb for _ in document.chunks]
+            else:
+                embeddings = self.embedding_service.embed_texts(chunk.content for chunk in document.chunks)
+            
             self.vector_store.upsert_chunks(document.chunks, embeddings)
             self.graph_store.add_document(document)
 
