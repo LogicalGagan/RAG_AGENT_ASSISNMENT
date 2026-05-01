@@ -7,11 +7,14 @@ from ..schemas import DocumentSummary, GraphSummary, HealthResponse, IngestRespo
 from ..services.rag import RAGOrchestrator
 
 
+from functools import lru_cache
+
 router = APIRouter()
 
 
-def get_orchestrator(settings: Settings = Depends(get_settings)) -> RAGOrchestrator:
-    return RAGOrchestrator(settings)
+@lru_cache()
+def get_orchestrator() -> RAGOrchestrator:
+    return RAGOrchestrator(get_settings())
 
 
 @router.get("/health", response_model=HealthResponse)

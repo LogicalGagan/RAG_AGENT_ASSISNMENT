@@ -20,16 +20,18 @@ class Settings(BaseSettings):
     openai_api_key: str | None = None
     openai_embedding_model: str = "text-embedding-3-small"
     openai_chat_model: str = "gpt-4o-mini"
+    gemini_api_key: str | None = None
+    gemini_model: str = "gemini-2.5-flash"
     llm_provider: str = "ollama"
     ollama_base_url: str = "http://host.docker.internal:11434"
     ollama_model: str = "qwen2:0.5b"
     ollama_vision_model: str = "moondream"
-    ollama_timeout_seconds: float = 120.0
+    ollama_timeout_seconds: float = 300.0
     pinecone_api_key: str | None = None
-    pinecone_index_name: str = "multimodal-rag"
+    pinecone_index_name: str = "ecommerce-rag"
 
-    chunk_size: int = 900
-    chunk_overlap: int = 150
+    chunk_size: int = 300
+    chunk_overlap: int = 50
     query_top_k: int = 5
     graph_neighbor_limit: int = 3
 
@@ -39,6 +41,10 @@ class Settings(BaseSettings):
     chroma_dir: Path = data_dir / "chroma"
     graph_path: Path = data_dir / "graph" / "knowledge_graph.json"
     registry_path: Path = data_dir / "graph" / "document_registry.json"
+
+    @property
+    def use_gemini(self) -> bool:
+        return self.llm_provider.lower() == "gemini" and bool(self.gemini_api_key)
 
     @property
     def use_openai(self) -> bool:

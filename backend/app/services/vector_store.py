@@ -96,6 +96,20 @@ class VectorStore:
             return
 
         try:
-            self.index.delete(filter={"document_id": {"$eq": document_id}})
+            # Query the exact IDs to safely delete from Pinecone
+            dummy_vector = [0.1] * 512
+            result = self.index.query(
+                vector=dummy_vector,
+                top_k=1000,
+                filter={"document_id": document_id},
+                include_metadata=False
+            )
+            ids_to_delete = [match.id for match in result.matches]
+            
+            if ids_to_delete:
+                self.index.delete(ids=ids_to_delete)
+                print(f"Successfully deleted {len(ids_to_delete)} chunks from Pinecone.")
+            else:
+                print(f"No chunks found in Pinecone for document {document_id}.")
         except Exception as e:
             print(f"Error deleting from pinecone: {e}")

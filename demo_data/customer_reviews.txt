@@ -1,0 +1,13 @@
+# Customer Reviews
+
+## Classic Black Leather Biker Jacket
+- "Absolutely love this jacket! The leather feels premium and it pairs perfectly with my aviator sunglasses." - 5/5 stars
+- "A bit stiff at first, but breaks in nicely. Very warm for winter rides." - 4/5 stars
+
+## AeroGlide Running Shoes
+- "These red shoes are incredibly bright and very comfortable. I ran 10 miles in them yesterday without any blisters." - 5/5 stars
+- "Good cushioning but the laces are a bit too short." - 4/5 stars
+
+## Titanium Smartwatch Pro
+- "Battery actually lasts 8 days for me! The sleep tracking is very accurate. Best watch I've owned." - 5/5 stars
+- "The screen is bright, but I wish the charging cable was longer." - 3.5/5 stars

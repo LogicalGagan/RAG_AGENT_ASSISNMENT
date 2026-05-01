@@ -17,7 +17,19 @@ except ImportError:  # pragma: no cover - optional dependency path
 class LLMService:
     def __init__(self, settings: Settings) -> None:
         self.settings = settings
-        self.client = OpenAI(api_key=settings.openai_api_key) if settings.use_openai and OpenAI else None
+        if settings.use_gemini and OpenAI:
+            self.client = OpenAI(
+                api_key=settings.gemini_api_key,
+                base_url="https://generativelanguage.googleapis.com/v1beta/openai/"
+            )
+            self.chat_model = settings.gemini_model
+        elif settings.use_openai and OpenAI:
+            self.client = OpenAI(api_key=settings.openai_api_key)
+            self.chat_model = settings.openai_chat_model
+        else:
+            self.client = None
+            self.chat_model = None
+
         self.ollama_client = (
             httpx.Client(base_url=settings.ollama_base_url, timeout=settings.ollama_timeout_seconds)
             if settings.use_ollama
@@ -57,7 +69,7 @@ class LLMService:
             try:
                 prompt = self._build_answer_prompt(question, query_plan, retrieved_context, graph_insights)
                 response = self.client.chat.completions.create(
-                    model=self.settings.openai_chat_model,
+                    model=self.chat_model,
                     messages=[
                         {
                             "role": "system",
@@ -86,9 +98,22 @@ class LLMService:
         return "\n".join(summary_lines)
 
     def describe_image(self, image_path: Path, filename: str) -> str:
+        import io
+        from PIL import Image
+        
+        try:
+            with Image.open(image_path) as img:
+                if img.mode != "RGB":
+                    img = img.convert("RGB")
+                buffer = io.BytesIO()
+                img.save(buffer, format="JPEG")
+                encoded = base64.b64encode(buffer.getvalue()).decode("utf-8")
+        except Exception as e:
+            print(f"Error converting image format: {e}")
+            encoded = base64.b64encode(image_path.read_bytes()).decode("utf-8")
+
         if self.ollama_client:
             try:
-                encoded = base64.b64encode(image_path.read_bytes()).decode("utf-8")
                 response = self.ollama_client.post(
                     "/api/generate",
                     json={
@@ -106,18 +131,17 @@ class LLMService:
                 answer = payload.get("response", "").strip()
                 if answer:
                     return answer
-            except Exception:
+            except Exception as e:
+                print(f"Ollama vision exception: {e}")
                 pass
 
         if not self.client:
             return ""
 
-        encoded = base64.b64encode(image_path.read_bytes()).decode("utf-8")
-        suffix = image_path.suffix.lower().replace(".", "") or "jpeg"
-        data_url = f"data:image/{suffix};base64,{encoded}"
+        data_url = f"data:image/jpeg;base64,{encoded}"
         try:
             response = self.client.chat.completions.create(
-                model=self.settings.openai_chat_model,
+                model=self.chat_model,
                 messages=[
                     {
                         "role": "user",
